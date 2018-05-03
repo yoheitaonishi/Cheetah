@@ -81,11 +81,6 @@ def get_listing_tweet(one_minute_tw):
     listed_array = []
     for tw in one_minute_tw:
         for key in tw.keys():
-            print(key)
-            print(key.__class__.__name__)
-            print(BINANCE)
-            print(BINANCE.__class__.__name__)
-            print(key == int(BINANCE))
             if key == int(BINANCE):
                 if BINANCE_TW in tw.get(key): listed_array.append({key: tw.get(key)})
             elif key == int(BITHUMB):
@@ -112,7 +107,5 @@ def get_listing_information():
         one_minute_tw = get_one_minute_tweet(tw_array)
     if one_minute_tw:
         has_listing_info, listed_array = get_listing_tweet(one_minute_tw)
-    print(has_listing_info)
-    print(listed_array)
     return has_listing_info, listed_array
  

@@ -3,8 +3,9 @@ import json
 from kucoin.client import Client
 import time
 import re
-
 from datetime import datetime
+
+from detect_tweet import get_listing_information
 
 RATIO_OF_ORDER_TO_REMIANING = 1
 
@@ -19,9 +20,23 @@ api_secret = inifile.get('settings', 'API_SECRET')
 # set CuKoin client APIKEY
 client = Client(api_key, api_secret)
 
+
 # tweetから銘柄を抽出する
 # TODO: KuCoinの銘柄リストを取得して、tweetの銘柄の取得する
-
+has_listing_info, listed_array = get_listing_information()
+cryptocurrencies = open("cryptocurrencies.json")
+data = json.load(cryptocurrencies)
+crypto_symbols = data.keys()
+# 単語毎に配列
+listed_word = listed_array.split()
+# $マークの削除
+for word in listed_word:
+    word = word.replace('(', '')
+    word = word.replace(')', '')
+    word = word.replace('$', '')
+    word = word.replace('#', '')
+    if word in crypto_symbols:
+        order_symbol = word
 
 #order_symbol
 order_currency_symbol = order_symbol + "-BTC"
