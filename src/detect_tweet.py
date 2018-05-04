@@ -18,11 +18,12 @@ AT = inifile.get('settings', 'AT')  # Access Token
 AS = inifile.get('settings', 'AS')  # Accesss Token Secert
 
 ### twitter ID (優先度順に書いておく)
-BINANCE = "877807935493033984"
+#BINANCE = "877807935493033984"
 BITHUMB = "908496633196814337"
 BITFINEX = "886832413"
 OKEX = "867617849208037377"
 yoheitaonishi = "3012996895"
+BINANCE = "3012996895"
 USER_IDS = [BINANCE, BITHUMB, BITFINEX, OKEX, yoheitaonishi]
 
 # twitterで上場時によく使われている文言
@@ -33,6 +34,18 @@ BITFINEX_TW = "We are pleased to introduce trading for"
  
 
 
+def get_listing_information():
+    client = define_client_proc()
+    tw_array = get_tweets_proc(client, USER_IDS)
+    one_minute_tw = []
+    listed_array= []
+    has_listing_info = False
+    if tw_array:
+        one_minute_tw = get_one_minute_tweet(tw_array)
+    if one_minute_tw:
+        has_listing_info, listed_array = get_listing_tweet(one_minute_tw)
+    return has_listing_info, listed_array
+ 
 # Clientを定義する
 def define_client_proc():
     consumer = oauth.Consumer(key=CK, secret=CS)
@@ -41,8 +54,7 @@ def define_client_proc():
     return client
 
 # NOTE: Twitter APIの呼び出し
-# Cronで1分に一回twitter APIを叩いて
-# twitter APIを叩いた1分前のtweetを識別する
+# Cronで1分に一回twitter APIを叩く
 
 def get_tweets_proc(client, user_ids):
     # 1分間に3回以上tweetしないと想定し、直近の2tweetを取得する
@@ -82,11 +94,11 @@ def get_listing_tweet(one_minute_tw):
     for tw in one_minute_tw:
         for key in tw.keys():
             if key == int(BINANCE):
-                if BINANCE_TW in tw.get(key): listed_array.append({key: tw.get(key)})
+                if BINANCE_TW in tw.get(key): listed_array.append(tw.get(key))
             elif key == int(BITHUMB):
-                if BITHUMB_TW in tw.get(key): listed_array.append({key: tw.get(key)})
+                if BITHUMB_TW in tw.get(key): listed_array.append(tw.get(key))
             elif key == int(BITFINEX):
-                if BITFINEX_TW in tw.get(key): listed_array.append({key: tw.get(key)})
+                if BITFINEX_TW in tw.get(key): listed_array.append(tw.get(key))
             #elif key == OKEX:
                 #if OKEX_TW in tw.get(key): listed_array.append({key: tw.get(key)})
     
@@ -96,16 +108,3 @@ def get_listing_tweet(one_minute_tw):
         has_listing_info = True
     
     return has_listing_info, listed_array
-
-def get_listing_information():
-    client = define_client_proc()
-    tw_array = get_tweets_proc(client, USER_IDS)
-    one_minute_tw = []
-    listed_array= []
-    has_listing_info = False
-    if tw_array:
-        one_minute_tw = get_one_minute_tweet(tw_array)
-    if one_minute_tw:
-        has_listing_info, listed_array = get_listing_tweet(one_minute_tw)
-    return has_listing_info, listed_array
- 
