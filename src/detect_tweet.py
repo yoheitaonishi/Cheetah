@@ -18,13 +18,14 @@ AT = inifile.get('settings', 'AT')  # Access Token
 AS = inifile.get('settings', 'AS')  # Accesss Token Secert
 
 ### twitter ID (優先度順に書いておく)
-#BINANCE = "877807935493033984"
+BINANCE = "877807935493033984"
 BITHUMB = "908496633196814337"
 BITFINEX = "886832413"
 OKEX = "867617849208037377"
-yoheitaonishi = "3012996895"
-BINANCE = "3012996895"
-USER_IDS = [BINANCE, BITHUMB, BITFINEX, OKEX, yoheitaonishi]
+#yoheitaonishi = "3012996895"
+#BINANCE =      "3012996895"
+#USER_IDS = [BINANCE, BITHUMB, BITFINEX, OKEX, yoheitaonishi]
+USER_IDS = [BINANCE, BITHUMB, BITFINEX, OKEX]
 
 # twitterで上場時によく使われている文言
 BINANCE_TW = "#Binance Lists"
