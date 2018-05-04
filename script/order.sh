@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # KuCoin
-cd ../src && python order_on_kucoin.py
+cd /Users/yoheitaonishi/block_chain/bot/Cheetah/src && python order_on_kucoin.py
