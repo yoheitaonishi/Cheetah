@@ -96,7 +96,7 @@ def order_on_kucoin(kucoin_client, order_currency_symbol, unit_price):
     buy_order_amount =  math.floor(order_amount / unit_price)
     transaction = kucoin_client.create_buy_order( order_currency_symbol, unit_price, buy_order_amount)
     if "orderOid" in transaction: 
-        logger.info("発注が完了しました！")
+        logger.info(order_currency_symbol + "を" + "単価" + str(unit_price) + "で" + str(buy_order_amount) + "のBUY注文が完了しました！")
 
 has_listing_info, listed_array = get_listing_information()
 if not has_listing_info: 
