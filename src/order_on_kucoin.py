@@ -10,8 +10,10 @@ import urllib.request, urllib.error
 from detect_tweet import get_listing_information
 import sys
 import logging
+import math
+from statistics import mean, median,variance,stdev
 
-RATIO_OF_ORDER_TO_REMIANING = 1
+RATIO_OF_ORDER_TO_REMIANING = 0.1
 
 # load config
 inifile = configparser.ConfigParser()
@@ -41,18 +43,6 @@ sh.setFormatter(formatter)
 
 #################### KuCoin ####################
 
-has_listing_info, listed_array = get_listing_information()
-if not has_listing_info: 
-    logger.info("上場のtweetはありませんでした...")
-    sys.exit()
-order_symbol = get_symbol_from_list(listed_array)
-if not order_symbol: 
-    sys.exit()
-order_currency_symbol = order_symbol + "-BTC"
-#print(order_currency_symbol)
-unit_price = get_unit_price_of_tx_on_kucoin(order_currency_symbol)
-order_on_kucoin(kucoin_client, order_currency_symbol, unit_price)
-
 # kucoinの取引可能銘柄のsymbolを取得する
 def get_enable_symboles_on_kucoin():
     request = urllib.request.urlopen('https://api.kucoin.com/v1/market/open/symbols').read()
@@ -81,14 +71,17 @@ def get_symbol_from_list(listed_array):
         logger.info("KuCoinで$" + order_symbol + "は取引できません...")
     return order_symbol
 
-# 発注する銘柄の相場を取得（直近10オーダーの最安値を発注金額とする）
+# 発注する銘柄の相場を取得（直近10オーダーの中央値を発注金額とする）
 def get_unit_price_of_tx_on_kucoin(order_currency_symbol):
     buy_orders = kucoin_client.get_buy_orders(order_currency_symbol, limit=10)
+    unit_prices = []
     unit_price = 0
     for order in buy_orders:
-        if unit_price == 0 or unit_price > order[0]: unit_price = order[0]
-    if unit_price == 0:
-        logger.info("相場情報を取得できませんでした...")
+        unit_prices.append(order[0])
+        unit_price = median(unit_prices)
+    if unit_price == 0: logger.info("相場情報を取得できませんでした...")
+    #print(buy_orders)
+    #print(unit_prices)
     return unit_price
 
 
@@ -100,8 +93,21 @@ def order_on_kucoin(kucoin_client, order_currency_symbol, unit_price):
     # アカウント残高から発注金額を計算
     order_amount = balances * RATIO_OF_ORDER_TO_REMIANING
     # 買い注文をする
-    transaction = kucoin_client.create_order( order_currency_symbol, Client.SIDE_BUY, unit_price, order_amount)
+    buy_order_amount =  math.floor(order_amount / unit_price)
+    transaction = kucoin_client.create_buy_order( order_currency_symbol, unit_price, buy_order_amount)
     if "orderOid" in transaction: 
         logger.info("発注が完了しました！")
+
+has_listing_info, listed_array = get_listing_information()
+if not has_listing_info: 
+    logger.info("上場のtweetはありませんでした...")
+    sys.exit()
+order_symbol = get_symbol_from_list(listed_array)
+if not order_symbol: 
+    sys.exit()
+order_currency_symbol = order_symbol + "-BTC"
+#print(order_currency_symbol)
+unit_price = get_unit_price_of_tx_on_kucoin(order_currency_symbol)
+order_on_kucoin(kucoin_client, order_currency_symbol, unit_price)
 
 #################### KuCoin ####################
