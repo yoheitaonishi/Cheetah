@@ -4,16 +4,11 @@
 import configparser
 import json
 from kucoin.client import Client
-import time
-import re
-from datetime import datetime
 import urllib.request, urllib.error
 from detect_tweet import get_listing_information
 import sys
 import logging
 import math
-from statistics import mean, median,variance,stdev
-import regex
 
 RATIO_OF_ORDER_TO_REMIANING = 1
 
@@ -72,7 +67,6 @@ def get_symbol_from_list(listed_array):
     # 優先順に格納されているので1番目の情報を優先
     first_listed_sentence = listed_array[0]
     # 括弧()が付いている単語のみ切り出して文末に追加しておく
-    #fixed_listed_sentence = regex.search(r"\(.+?\)", first_listed_sentence).replace('(', ' ').replace(')', ' ')
     fixed_listed_sentence = first_listed_sentence.replace('(', ' ').replace(')', ' ')
     listed_word = fixed_listed_sentence.split()
     # 特定文字の削除
