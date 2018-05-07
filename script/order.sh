@@ -1,4 +1,4 @@
 #!/bin/sh
 
-# KuCoin
-cd /Users/yoheitaonishi/block_chain/bot/Cheetah/src && python order_on_kucoin.py
+# KuCoin production
+cd /var/www/Cheetah/src && /home/ec2-user/.pyenv/versions/anaconda3-5.1.0/bin/python order_on_kucoin.py
