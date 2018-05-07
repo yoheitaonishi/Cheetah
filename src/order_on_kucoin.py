@@ -1,3 +1,4 @@
+# OSXでは2行目を削除しないとencodeエラーが発生する
 # coding:utf-8
 
 import configparser
@@ -12,8 +13,9 @@ import sys
 import logging
 import math
 from statistics import mean, median,variance,stdev
+import regex
 
-RATIO_OF_ORDER_TO_REMIANING = 0.1
+RATIO_OF_ORDER_TO_REMIANING = 1
 
 # load config
 inifile = configparser.ConfigParser()
@@ -41,8 +43,6 @@ sh.setFormatter(formatter)
 
 
 
-#################### KuCoin ####################
-
 # kucoinの取引可能銘柄のsymbolを取得する
 def get_enable_symboles_on_kucoin():
     request = urllib.request.urlopen('https://api.kucoin.com/v1/market/open/symbols').read()
@@ -57,14 +57,18 @@ def get_enable_symboles_on_kucoin():
 def get_symbol_from_list(listed_array):
     kucoin_symbols = get_enable_symboles_on_kucoin()
     # 優先順に格納されているので1番目の情報を優先
-    listed_word = listed_array[0].split()
+    first_listed_sentence = listed_array[0]
+    # 括弧()が付いている単語のみ切り出して文末に追加しておく
+    #fixed_listed_sentence = regex.search(r"\(.+?\)", first_listed_sentence).replace('(', ' ').replace(')', ' ')
+    fixed_listed_sentence = first_listed_sentence.replace('(', ' ').replace(')', ' ')
+    listed_word = fixed_listed_sentence.split()
     # 特定文字の削除
     order_symbol = ""
+    print(listed_word)
     for word in listed_word:
-        word = word.replace('(', '')
-        word = word.replace(')', '')
         word = word.replace('$', '')
         word = word.replace('#', '')
+        print(word)
         if word in kucoin_symbols:
             order_symbol = word
     if not order_symbol: 
@@ -109,5 +113,3 @@ order_currency_symbol = order_symbol + "-BTC"
 #print(order_currency_symbol)
 unit_price = get_unit_price_of_tx_on_kucoin(order_currency_symbol)
 order_on_kucoin(kucoin_client, order_currency_symbol, unit_price)
-
-#################### KuCoin ####################
