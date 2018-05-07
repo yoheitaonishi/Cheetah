@@ -1,13 +1,9 @@
-# OSXでは2行目を削除しないとencodeエラーが発生する
 # coding:utf-8
 
 import configparser
 import json
 from kucoin.client import Client
 import urllib.request, urllib.error
-from detect_tweet import get_listing_information
-import sys
-import logging
 import math
 
 RATIO_OF_ORDER_TO_REMIANING = 1
@@ -21,31 +17,12 @@ kucoin_api_key = inifile.get('settings', 'KUCOIN_API_KEY')
 kucoin_api_secret = inifile.get('settings', 'KUCOIN_API_SECRET')
 kucoin_client = Client(kucoin_api_key, kucoin_api_secret)
 
-# ログの出力名を設定
-logger = logging.getLogger('LoggingTest')
-# ログレベルの設定
-logger.setLevel(10)
-# ログのファイル出力先を設定
-fh = logging.FileHandler('../log/order.log')
-logger.addHandler(fh)
-# ログのコンソール出力の設定
-sh = logging.StreamHandler()
-logger.addHandler(sh)
-# ログの出力形式の設定
-formatter = logging.Formatter('%(asctime)s:%(lineno)d:%(levelname)s:%(message)s')
-fh.setFormatter(formatter)
-sh.setFormatter(formatter)
 
 
-
-def apply_on_kucoin():
-    has_listing_info, listed_array = get_listing_information()
-    if not has_listing_info: 
-        logger.info("上場のtweetはありませんでした...")
-        sys.exit()
+def apply_on_kucoin(has_listing_info, listed_array):
     order_symbol = get_symbol_from_list(listed_array)
     if not order_symbol: 
-        sys.exit()
+        return False
     order_currency_symbol = order_symbol + "-BTC"
     #print(order_currency_symbol)
     unit_price = get_unit_price_of_tx_on_kucoin(order_currency_symbol)
@@ -79,7 +56,7 @@ def get_symbol_from_list(listed_array):
         if word in kucoin_symbols:
             order_symbol = word
     if not order_symbol: 
-        logger.info("KuCoinで$" + order_symbol + "は取引できません...")
+        logger.info("KuCoinで取引できる通貨はありません...")
     return order_symbol
 
 # 発注する銘柄の決済情報を取得（直近10の決済済買い注文の最高値+2%を発注金額とする）
