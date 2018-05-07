@@ -43,6 +43,19 @@ sh.setFormatter(formatter)
 
 
 
+def apply_on_kucoin():
+    has_listing_info, listed_array = get_listing_information()
+    if not has_listing_info: 
+        logger.info("上場のtweetはありませんでした...")
+        sys.exit()
+    order_symbol = get_symbol_from_list(listed_array)
+    if not order_symbol: 
+        sys.exit()
+    order_currency_symbol = order_symbol + "-BTC"
+    #print(order_currency_symbol)
+    unit_price = get_unit_price_of_tx_on_kucoin(order_currency_symbol)
+    order_on_kucoin(kucoin_client, order_currency_symbol, unit_price)
+
 # kucoinの取引可能銘柄のsymbolを取得する
 def get_enable_symboles_on_kucoin():
     request = urllib.request.urlopen('https://api.kucoin.com/v1/market/open/symbols').read()
@@ -75,19 +88,18 @@ def get_symbol_from_list(listed_array):
         logger.info("KuCoinで$" + order_symbol + "は取引できません...")
     return order_symbol
 
-# 発注する銘柄の相場を取得（直近10オーダーの中央値を発注金額とする）
+# 発注する銘柄の決済情報を取得（直近10の決済済買い注文の最高値+2%を発注金額とする）
 def get_unit_price_of_tx_on_kucoin(order_currency_symbol):
     buy_orders = kucoin_client.get_buy_orders(order_currency_symbol, limit=10)
     unit_prices = []
     unit_price = 0
     for order in buy_orders:
         unit_prices.append(order[0])
-        unit_price = median(unit_prices)
+    unit_price = max(unit_prices)
     if unit_price == 0: logger.info("相場情報を取得できませんでした...")
-    #print(buy_orders)
-    #print(unit_prices)
+    unit_price = unit_price * 1.02
+    #print(unit_price)
     return unit_price
-
 
 def order_on_kucoin(kucoin_client, order_currency_symbol, unit_price):
     # アカウント残高を取得
@@ -102,14 +114,4 @@ def order_on_kucoin(kucoin_client, order_currency_symbol, unit_price):
     if "orderOid" in transaction: 
         logger.info(order_currency_symbol + "を" + "単価" + str(unit_price) + "で" + str(buy_order_amount) + "のBUY注文が完了しました！")
 
-has_listing_info, listed_array = get_listing_information()
-if not has_listing_info: 
-    logger.info("上場のtweetはありませんでした...")
-    sys.exit()
-order_symbol = get_symbol_from_list(listed_array)
-if not order_symbol: 
-    sys.exit()
-order_currency_symbol = order_symbol + "-BTC"
-#print(order_currency_symbol)
-unit_price = get_unit_price_of_tx_on_kucoin(order_currency_symbol)
-order_on_kucoin(kucoin_client, order_currency_symbol, unit_price)
+
