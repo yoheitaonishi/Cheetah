@@ -18,7 +18,7 @@ DEVIDED_MARKET_ORDER = 4
 
 
 
-def apply_on_kucoin(api_key, api_secret, has_listing_info, listed_array, exchange_type):
+def apply(api_key, api_secret, has_listing_info, listed_array, exchange_type):
     client = Client(api_key, api_secret)
     order_symbol = get_symbol_from_list(listed_array)
     if not order_symbol: 
