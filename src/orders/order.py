@@ -1,11 +1,14 @@
 # coding:utf-8
 
+import sys
 import configparser
 import json
-from kucoin.client import Client
-from binance.client import Client
+import kucoin.client
+import binance.client
 import urllib.request, urllib.error
 import math
+sys.path.append('../')
+from order_logging import logger
 
 RATIO_OF_ORDER_TO_REMIANING = 1
 CURRENCY_PAIR = "BTC"
@@ -19,16 +22,18 @@ DEVIDED_MARKET_ORDER = 4
 
 
 def apply(api_key, api_secret, has_listing_info, listed_array, exchange_type):
-    client = Client(api_key, api_secret)
-    order_symbol = get_symbol_from_list(listed_array)
-    if not order_symbol: 
+    if exchange_type == "Binance":
+        client = binance.client.Client(api_key, api_secret)
+    elif exchange_type == "KuCoin":
+        client = kucoin.client.Client(api_key, api_secret)
+    order_symbol_pair = get_symbol_from_list(client, listed_array, exchange_type)
+    if not order_symbol_pair: 
         return False
-    order_currency_symbol = order_symbol + "-" + CURRENCY_PAIR
-    unit_price = get_unit_price_of_tx(client, order_currency_symbol)
-    order(client, order_currency_symbol, unit_price)
+    unit_price = get_unit_price_of_tx(client, order_symbol_pair, exchange_type)
+    order(client, order_symbol_pair, unit_price, exchange_type)
 
 # Get enable exchange pairs
-def get_enable_symboles_on_market(exchange_type):
+def get_enable_symboles_on_market(client, exchange_type):
     symbols = []
     if exchange_type == "Binance":
         symbols_data = client.get_products()["data"]
@@ -43,8 +48,8 @@ def get_enable_symboles_on_market(exchange_type):
     return symbols
 
 # Get listing currency symbol from tweet
-def get_symbol_from_list(listed_array, exchange_type):
-    symbols = get_enable_symboles_on_market(exchage_type)
+def get_symbol_from_list(client, listed_array, exchange_type):
+    symbols = get_enable_symboles_on_market(client, exchange_type)
     # Get first currency symbol from tweet
     # because symbol list is sorted by priority
     first_listed_sentence = listed_array[0]
@@ -62,7 +67,7 @@ def get_symbol_from_list(listed_array, exchange_type):
             order_symbol = word
             if exchange_type == "KuCoin": word + '-' + CURRENCY_PAIR
     if not order_symbol: 
-        logger.info("Tweet doesn't have information of currency listing on " exchange_type)
+        logger.info("Tweet doesn't have information of currency listing on " + exchange_type)
     return order_symbol
 
 # 発注する銘柄の決済情報を取得（直近10の決済済買い注文の最高値+2%を発注金額とする）
@@ -93,7 +98,7 @@ def get_balance_information(client, exchange_type):
     return balances
 
 def order(client, order_currency_symbol, unit_price, exchange_type):
-    balance = get_balance_information(client, exchange_type)
+    balances = get_balance_information(client, exchange_type)
     # Calculate order price
     order_amount = balances * RATIO_OF_ORDER_TO_REMIANING
     # Order BUY currency
@@ -114,6 +119,6 @@ def order(client, order_currency_symbol, unit_price, exchange_type):
         transaction = client.create_buy_order( order_currency_symbol, unit_price, buy_order_amount)
         order_response = ORDER_RESPONSE["KuCoin"]
     if order_response in transaction: 
-        logger.info("Cheetah ordered BUY "order_currency_symbol + str(buy_order_amount) + "@" + str(unit_price))
-    else
-        logger.error("[ERROR!!] Cheetah couldn't order BUY "order_currency_symbol + str(buy_order_amount) + "@" + str(unit_price))
+        logger.info("Cheetah ordered BUY "+ order_currency_symbol + str(buy_order_amount) + "@" + str(unit_price))
+    else:
+        logger.error("[ERROR!!] Cheetah couldn't order BUY " + order_currency_symbol + str(buy_order_amount) + "@" + str(unit_price))
